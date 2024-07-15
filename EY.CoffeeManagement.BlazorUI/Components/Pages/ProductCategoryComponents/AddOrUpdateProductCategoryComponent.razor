@@ -1,0 +1,71 @@
+@using EY.CoffeeManagement.App.Application.Dtos
+@using EY.CoffeeManagement.App.Application.Services.DomainServices.Contracts
+@inject IProductCategoryService _productCategoryService
+<div class="container">
+    <div class="form-group">
+        <label for="categoryName">Kategori Adı</label>
+        <input type="text" disabled="@isSaving" @bind="_categoryName" class="form-control" id="categoryName"/>
+    </div>
+    <div class="form-group">
+        <button type="submit" disabled="@isSaving" @onclick="Save" class="btn btn-success w-100">
+            @(ProductCategoryId.HasValue ? "Güncelle" : "Kaydet")
+            <BlazorBootstrap.Spinner Visible="isSaving" Size="SpinnerSize.Small" Title="Lütfen Bekleyiniz"></BlazorBootstrap.Spinner>
+
+        </button>
+    </div>
+
+</div>
+
+@code {
+    [Parameter] public Guid? ProductCategoryId { get; set; }
+    private bool isSaving = false;
+    private string _categoryName;
+    private CreateProductCategoryDto _model = new CreateProductCategoryDto("");
+    [Inject] public ToastService Toast { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ProductCategoryId.HasValue)
+        {
+            var productcategoryResult = await _productCategoryService.DetailAsync<DetailProductCategoryDto>(ProductCategoryId.Value);
+            if (productcategoryResult.IsSuccess)
+            {
+                _categoryName = productcategoryResult.Value.Name;
+            }
+        }
+    }
+
+    public async Task Save()
+    {
+        isSaving = true;
+
+        if (ProductCategoryId.HasValue)
+        {
+            var result = await _productCategoryService.UpdateAsync(ProductCategoryId.Value, new UpdateProductCategoryDto(_categoryName));
+            if (result.IsSuccess)
+            {
+                Toast.Notify(new ToastMessage(ToastType.Success, "Güncelleme başarılı!"));
+            }
+            else
+            {
+                Toast.Notify(new ToastMessage(ToastType.Danger, "Güncelleme Başarısız!"));
+            }
+        }
+        else
+        {
+            var result = await _productCategoryService.CreateAsync(new CreateProductCategoryDto(_categoryName));
+            if (result.IsSuccess)
+            {
+                Toast.Notify(new ToastMessage(ToastType.Success, "Yeni Kategori Eklendi!"));
+            }
+            else
+            {
+                Toast.Notify(new ToastMessage(ToastType.Danger, "Kategori eklenemedi!"));
+            }
+        }
+
+
+        isSaving = false;
+    }
+
+}

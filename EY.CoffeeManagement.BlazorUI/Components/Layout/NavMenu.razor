@@ -1,0 +1,80 @@
+﻿@inject IJSRuntime js
+<div class="sidebar">
+    <Sidebar2
+        @ref="_sideBar"
+        Href="/"
+
+        IconName="IconName.BootstrapFill"
+        Title="Blazor Bootstrap"
+        BadgeText="v1.3.1"
+
+        DataProvider="SidebarDataProvider"/>
+</div>
+
+
+@code {
+    bool applyPurpleStyle = false;
+    IEnumerable<NavItem>? navItems;
+    Sidebar2 _sideBar;
+
+    private async Task<Sidebar2DataProviderResult> SidebarDataProvider(Sidebar2DataProviderRequest request)
+    {
+        if (navItems is null)
+            navItems = GetNavItems();
+
+        ToggleSidebarStyles();
+        return await Task.FromResult(request.ApplyTo(navItems));
+    }
+
+    private IEnumerable<NavItem> GetNavItems()
+    {
+        navItems = new List<NavItem>
+        {
+            new NavItem { Id = "1", Href = "/getting-started", IconName = IconName.HouseDoorFill, Text = "Getting Started" },
+
+            new NavItem { Id = "2", Href = "ProductCategories", IconName = IconName.Backspace, Text = "Ürün Kategorileri" }
+        };
+
+        return navItems;
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await js.InvokeVoidAsync("RemoveCollapseClass");
+        }
+    }
+
+    private void ToggleSidebarStyles() => applyPurpleStyle = !applyPurpleStyle;
+}
+
+@* *@
+@* @if (applyPurpleStyle) *@
+@* { *@
+@*     <style> *@
+@*         :root { *@
+@*             --bb-sidebar-width: 270px; *@
+@*             --bb-sidebar-collapsed-width: 50px; *@
+@*             --bb-sidebar-background-color: rgba(234, 234, 234, 1); *@
+@*             --bb-sidebar-top-row-background-color: rgba(0,0,0,0.08); *@
+@*             --bb-sidebar-top-row-border-color: rgb(194,192,192); *@
+@*             --bb-sidebar-title-text-color: rgb(0,0,0); *@
+@*             --bb-sidebar-brand-icon-color: #6f42c1; *@
+@*             --bb-sidebar-brand-image-width: 24px; *@
+@*             --bb-sidebar-brand-image-height: 24px; *@
+@*             --bb-sidebar-title-badge-text-color: rgb(255,255,255); *@
+@*             --bb-sidebar-title-badge-background-color: rgba(25,135,84,var(--bs-bg-opacity,1)); *@
+@*             --bb-sidebar-navbar-toggler-icon-color: rgb(0,0,0); *@
+@*             --bb-sidebar-navbar-toggler-background-color: rgba(0,0,0,0.08); *@
+@*             --bb-sidebar-content-border-color: rgb(194,192,192); *@
+@*             --bb-sidebar-nav-item-text-color: rgba(0,0,0,0.9); *@
+@*             --bb-sidebar-nav-item-text-active-color-rgb: 0,0,0; *@
+@*             --bb-sidebar-nav-item-text-hover-color: rgba(var(--bb-sidebar-nav-item-text-active-color-rgb),0.9); *@
+@*             --bb-sidebar-nav-item-text-active-color: rgba(var(--bb-sidebar-nav-item-text-active-color-rgb),0.9); *@
+@*             --bb-sidebar-nav-item-background-hover-color: rgba(var(--bb-sidebar-nav-item-text-active-color-rgb),0.08); *@
+@*             --bb-sidebar-nav-item-group-background-color: rgba(var(--bb-sidebar-nav-item-text-active-color-rgb),0.08); *@
+@*         } *@
+@*     </style> *@
+@* } *@

@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EY.CoffeeManagement.App", "EY.CoffeeManagement.App\EY.CoffeeManagement.App.csproj", "{B08A70AF-54AE-47F4-A6E1-F58C9A7D849A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UIS", "UIS", "{E68E611D-A638-4EF2-8F6E-942D1B77A74F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EY.CoffeeManagement.BlazorUI", "EY.CoffeeManagement.BlazorUI\EY.CoffeeManagement.BlazorUI.csproj", "{F8DFA9B3-B540-471C-ADE4-7DE3A0B926AD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BC767A0B-BA08-4250-A840-061D6AE36A6A}"
+	ProjectSection(SolutionItems) = preProject
+		docker-compose.yml = docker-compose.yml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B08A70AF-54AE-47F4-A6E1-F58C9A7D849A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B08A70AF-54AE-47F4-A6E1-F58C9A7D849A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B08A70AF-54AE-47F4-A6E1-F58C9A7D849A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B08A70AF-54AE-47F4-A6E1-F58C9A7D849A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8DFA9B3-B540-471C-ADE4-7DE3A0B926AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8DFA9B3-B540-471C-ADE4-7DE3A0B926AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8DFA9B3-B540-471C-ADE4-7DE3A0B926AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8DFA9B3-B540-471C-ADE4-7DE3A0B926AD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F8DFA9B3-B540-471C-ADE4-7DE3A0B926AD} = {E68E611D-A638-4EF2-8F6E-942D1B77A74F}
+	EndGlobalSection
+EndGlobal

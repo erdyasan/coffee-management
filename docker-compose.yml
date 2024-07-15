@@ -1,0 +1,6 @@
+﻿services:
+  ey.coffeemanagement.blazoruı:
+    image: ey.coffeemanagement.blazoruı
+    build:
+      context: .
+      dockerfile: EY.CoffeeManagement.BlazorUI/Dockerfile

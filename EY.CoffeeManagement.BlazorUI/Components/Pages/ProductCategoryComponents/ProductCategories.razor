@@ -1,0 +1,106 @@
+@page "/ProductCategories"
+@using EY.CoffeeManagement.App.Application.Dtos
+@using EY.CoffeeManagement.App.Application.Dtos.BaseDtos
+@using EY.CoffeeManagement.App.Application.Services.DomainServices.Contracts
+@using PSC.Blazor.Components.DataTable.Code.Filters
+@using PSC.Blazor.Components.DataTable.Enums
+@using SortDirection = PSC.Blazor.Components.DataTable.Enums.SortDirection
+@inject IProductCategoryService _productCategoryService
+<div class="container justify-content-start">
+    <button class="btn btn-primary" @onclick="Togglecanvas">Yeni Ekle</button>
+    <div class="row">
+        <div class="col">
+
+        </div>
+    </div>
+</div>
+<DataTable TModel="ListProductCategoryDto"
+           UsePaging="@true"
+           IsLoading="isTableLoading"
+           PageCount="@(_productCategoryList?.TotalPage ?? 0)"
+           Items="@(_productCategoryList?.list.ToList() ?? [])"
+           FetchData="FetchData"
+           ShowHeaderFilters="@true"
+           PageSizeList="@(new List<int> { 1, 2, 3, 4, 5 })"
+           PageNumber="@(_productCategoryList?.page ?? 1)"
+           PageSize="@(_productCategoryList?.size ?? 5)"
+           Styles="TableStyle.Hover"
+           IncludeSearchButton="true"
+           RowClickedEvent="Select">
+    <DataTableColumn
+        TModel="ListProductCategoryDto"
+        Property="x => x.id"
+        CustomTitle="Ürün id">
+    </DataTableColumn>
+
+    <DataTableColumn
+        TModel="ListProductCategoryDto"
+        Property="x => x.Name"
+        IsFilterable="@true"
+        CustomTitle="Ürün Adı">
+    </DataTableColumn>
+
+</DataTable>
+
+<Offcanvas @ref="canvas" Placement="Placement.Start">
+</Offcanvas>
+
+
+@code {
+    private Offcanvas canvas = default!;
+    private bool canvasOpened = false;
+    private bool isTableLoading = true;
+    PaginateResponse<ListProductCategoryDto>? _productCategoryList;
+    ListProductCategoryDto? selectedProductcategoryDto = null;
+
+    private void Select(ListProductCategoryDto selected)
+    {
+        selectedProductcategoryDto = selected;
+    }
+
+    private async Task Togglecanvas()
+    {
+        canvas.Placement = Placement.End;
+        if (canvasOpened)
+        {
+            await canvas.HideAsync();
+        }
+        else
+        {
+            if (selectedProductcategoryDto is null)
+            {
+                await canvas.ShowAsync<AddOrUpdateProductCategoryComponent>("Yeni Ürün Kategorisi Ekle");
+            }
+            else
+            {
+                await canvas.ShowAsync<AddOrUpdateProductCategoryComponent>("Güncelle", new Dictionary<string, object>
+                {
+                    { nameof(AddOrUpdateProductCategoryComponent.ProductCategoryId), selectedProductcategoryDto.id }
+                });
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    private async Task FetchData(RequestArgs<ListProductCategoryDto> request)
+    {
+        isTableLoading = true;
+        StateHasChanged();
+
+        var categoriesResult = await _productCategoryService.PaginateAsync<ListProductCategoryDto>(new PaginateRequest(request.Pager.PageNumber, request.Pager.PageSize));
+        if (categoriesResult.IsSuccess)
+        {
+            _productCategoryList = categoriesResult.Value;
+        }
+
+
+        isTableLoading = false;
+        StateHasChanged();
+    }
+
+
+}
