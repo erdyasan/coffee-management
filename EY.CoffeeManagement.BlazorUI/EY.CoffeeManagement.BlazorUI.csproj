@@ -16,7 +16,6 @@
 
     <ItemGroup>
       <PackageReference Include="Blazor.Bootstrap" Version="3.0.0-preview.2" />
-      <PackageReference Include="PSC.Blazor.Components.DataTable" Version="6.0.13" />
     </ItemGroup>
 
     <ItemGroup>

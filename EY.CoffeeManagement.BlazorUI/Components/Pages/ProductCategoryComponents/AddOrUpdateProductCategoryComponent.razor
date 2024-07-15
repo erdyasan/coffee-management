@@ -23,15 +23,29 @@
     private CreateProductCategoryDto _model = new CreateProductCategoryDto("");
     [Inject] public ToastService Toast { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    public void Clear()
+    {
+        _categoryName = string.Empty;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (ProductCategoryId.HasValue)
         {
             var productcategoryResult = await _productCategoryService.DetailAsync<DetailProductCategoryDto>(ProductCategoryId.Value);
             if (productcategoryResult.IsSuccess)
             {
-                _categoryName = productcategoryResult.Value.Name;
+                if (productcategoryResult.Value.Name != _categoryName)
+                {
+                    _categoryName = productcategoryResult.Value.Name;
+                    StateHasChanged();
+                }
             }
+        }
+        else
+        {
+            _categoryName = string.Empty;
+            StateHasChanged();
         }
     }
 
