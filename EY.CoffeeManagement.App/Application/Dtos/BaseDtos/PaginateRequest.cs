@@ -4,6 +4,18 @@ public record PaginateRequest(int Page, int Size)
 {
     public int Skip() => (Page - 1) * Size;
     public int Take() => Size;
+
+    public static PaginateRequest FromSkip(int? skip, int? size)
+    {
+        skip ??= 0;
+        size ??= 25;
+        if (skip == 0)
+        {
+            return new PaginateRequest(1, size.Value);
+        }
+
+        return new PaginateRequest((skip.Value / size.Value) + 1, size.Value);
+    }
 };
 
 public record PaginateResponse<T>(IEnumerable<T> list, int page, int size, int totalCount)

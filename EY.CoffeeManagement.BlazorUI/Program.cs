@@ -1,5 +1,6 @@
 using EY.CoffeeManagement.App;
 using EY.CoffeeManagement.BlazorUI.Components;
+using Radzen;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +9,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddBlazorBootstrap();
+builder.Services.AddRadzenComponents();
 builder.Services.AddCoffeeManagementApp(builder.Configuration);
 var app = builder.Build();
 

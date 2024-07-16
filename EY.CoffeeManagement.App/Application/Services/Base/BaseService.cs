@@ -92,7 +92,9 @@ public abstract class BaseService<T> : IBaseService where T : BaseEntity
         var queryable = _context.Set<T>().AsNoTracking();
 
         var totalCount = await queryable.CountAsync(cancellationToken: cancellationToken);
-        var results = await queryable.ProjectToType<TListDto>()
+        var results = await queryable
+            .OrderByDescending(x => x.CreatedAt)
+            .ProjectToType<TListDto>()
             .Skip(request.Skip())
             .Take(request.Take())
             .ToListAsync(cancellationToken: cancellationToken);

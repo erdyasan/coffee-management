@@ -1,55 +1,47 @@
 @page "/ProductCategories"
+@using System.Globalization
 @using EY.CoffeeManagement.App.Application.Dtos
 @using EY.CoffeeManagement.App.Application.Dtos.BaseDtos
 @using EY.CoffeeManagement.App.Application.Services.DomainServices.Contracts
 @using EY.CustomResult
-@inject ToastService _toast
 @inject IProductCategoryService _productCategoryService
-<div class="py-4 justify-content-start">
-    <div class="mb-2 row">
-        <div class="col">
-            <button class="btn btn-primary" @onclick="OpenCreateCanvas">Yeni Ekle</button>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col">
-            <Grid
-                @ref="_grid"
-                TItem="ListProductCategoryDto"
-                Class="table table-bordered table-hover"
-                AllowFiltering="true"
-                AllowPaging="true"
-                AllowSelection="true"
-                SelectionMode="GridSelectionMode.Single"
-                Responsive="true"
-                DataProvider="DataProvider"
-                PageSizeSelectorVisible="true"
-                EmptyText="Kategori yok"
-                PageSizeSelectorItems="@(new[] { 5, 10, 15, 25 })"
-                SelectedItemsChanged="Select"
-                Height="400">
-                <GridColumns>
-                    <GridColumn
-                        TItem="ListProductCategoryDto"
-                        HeaderText="Kategori Adı"
+@inject DialogService _dialog
+<RadzenCard>
 
-                        PropertyName="@(nameof(ListProductCategoryDto.Name))">
-                        @context.Name
-                    </GridColumn>
-                </GridColumns>
-            </Grid>
+    <RadzenStack AlignItems="AlignItems.Start" class="p4">
+        <RadzenButton Click="OpenCreateCanvas" Text="Yeni Ekle" ButtonStyle="ButtonStyle.Success">
 
-        </div>
+        </RadzenButton>
+        <RadzenDataGrid
+            PageNumbersCount="3"
+            AllowColumnResize="true"
+            @ref="_grid"
+            Count="totalCount"
+            LoadData="LoadData"
+            AllowPaging="true"
+            PageSize="5"
+            SelectionMode="DataGridSelectionMode.Single"
+            PageSizeText="Satır"
+            Culture="@(new CultureInfo("tr-tr"))"
+            RowSelect="Select"
+            Data="_productCategories"
+            RowDeselect="DeSelect"
+            PageSizeOptions="@( [5, 10, 15])"
+            Responsive="true"
+            AllowColumnPicking="true"
+            TItem="ListProductCategoryDto">
+            <Columns>
+                <RadzenDataGridColumn Filterable="false" Title="Kategori Adı" Property="@(nameof(ListProductCategoryDto.Name))"></RadzenDataGridColumn>
+                <RadzenDataGridColumn Width="fit-content" Title="Güncelle">
+                    <Template Context="data">
+                        <RadzenButton Text="Güncelle" ButtonStyle="ButtonStyle.Success" Click="@(async () => await OpenUpdateCanvas(data.id, data.Name))"></RadzenButton>
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
 
-        @if (selectedProductcategoryDto is not null)
-        {
-            <UpdateProductCategoryComponent
-                AfterSave="async () => { await _grid.RefreshDataAsync(); }"
-                ProductCategoryName="@selectedProductcategoryDto.Name"
-                Close="() => { selectedProductcategoryDto = null; }" ProductCategoryId="selectedProductcategoryDto!.id"/>
-        }
-    </div>
-</div>
+        </RadzenDataGrid>
+    </RadzenStack>
+</RadzenCard>
 
 <Offcanvas
     OnHidden="async () => await _grid.RefreshDataAsync()"
@@ -60,18 +52,40 @@
 @code {
     private Offcanvas canvas = default!;
     ListProductCategoryDto? selectedProductcategoryDto = null;
-    Grid<ListProductCategoryDto> _grid;
+    RadzenDataGrid<ListProductCategoryDto> _grid;
+    private List<ListProductCategoryDto> _selected = new();
+    private int totalCount = 0;
+    private bool isLoading = true;
+    private IEnumerable<ListProductCategoryDto> _productCategories;
 
-
-    private void Select(HashSet<ListProductCategoryDto> selected)
+    private async Task LoadData(LoadDataArgs args)
     {
-        if (selected.Count == 0)
+        isLoading = true;
+        StateHasChanged();
+        var result = await _productCategoryService.PaginateAsync<ListProductCategoryDto>(PaginateRequest.FromSkip(args.Skip, args.Top));
+
+        if (result.IsSuccess)
         {
-            selectedProductcategoryDto = null;
-            return;
+            _productCategories = result.Value.list;
+            totalCount = result.Value.totalCount;
+            if (result.Value.list.Any())
+            {
+                _selected.Add(result.Value.list.First());
+            }
         }
 
-        selectedProductcategoryDto = selected.First();
+        StateHasChanged();
+    }
+
+    private void Select(ListProductCategoryDto selected)
+    {
+        selectedProductcategoryDto = selected;
+        StateHasChanged();
+    }
+
+    private void DeSelect(ListProductCategoryDto deselected)
+    {
+        selectedProductcategoryDto = null;
         StateHasChanged();
     }
 
@@ -89,7 +103,23 @@
 
     private async Task OpenCreateCanvas()
     {
-        await canvas.ShowAsync<AddProductCategoryComponent>("Yeni Kategori ekle");
+        await _dialog.OpenAsync<AddProductCategoryComponent>("Yeni Kategori Ekle", options: new DialogOptions
+        {
+            Draggable = true,
+            ShowTitle = true,
+            Resizable = true,
+        });
+        await _grid.RefreshDataAsync();
+    }
+
+    private async Task OpenUpdateCanvas(Guid itemId, string itemName)
+    {
+        await _dialog.OpenAsync<UpdateProductCategoryComponent>("Kategoriyi Güncelle", new Dictionary<string, object>
+        {
+            { nameof(UpdateProductCategoryComponent.ProductCategoryId), itemId },
+            { nameof(UpdateProductCategoryComponent.ProductCategoryName), itemName }
+        });
+        await _grid.RefreshDataAsync();
     }
 
 

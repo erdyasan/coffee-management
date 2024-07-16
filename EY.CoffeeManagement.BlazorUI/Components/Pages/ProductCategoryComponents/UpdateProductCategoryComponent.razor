@@ -18,7 +18,7 @@
                     <ValidationMessage For="() => _model.Name" class="text-danger"/>
                 </div>
                 <div class="form-group justify-content space-between">
-                    <Button Type="ButtonType.Submit" Class="btn btn-success" Disabled="_isSaving"> Güncelle <Spinner Type="SpinnerType.Dots" Size="SpinnerSize.Small" Visible="@(_isSaving)"></Spinner></Button>
+                    <Button Type="BlazorBootstrap.ButtonType.Submit" Class="btn btn-success" Disabled="_isSaving"> Güncelle <Spinner Type="SpinnerType.Dots" Size="SpinnerSize.Small" Visible="@(_isSaving)"></Spinner></Button>
                     <Button @onclick="Delete" Class="btn btn-danger">
                         Sil
                     </Button>
