@@ -6,24 +6,30 @@ public sealed record ListProductCategoryDto(Guid id, string Name);
 
 public sealed record DetailProductCategoryDto(Guid id, string Name);
 
-public sealed record CreateProductCategoryDto(string Name);
-
-public sealed record UpdateProductCategoryDto(string Name);
-
-public sealed class CreateProductCategoryDtoValidator : AbstractValidator<CreateProductCategoryDto>
+public sealed class CreateProductCategoryDto
 {
-    public CreateProductCategoryDtoValidator()
-    {
-        RuleFor(x => x.Name)
-            .NotEmpty();
-    }
-}
+    public string Name { get; set; } = string.Empty;
 
-public sealed class UpdateProductCategoryDtoValidator : AbstractValidator<UpdateProductCategoryDto>
-{
-    public UpdateProductCategoryDtoValidator()
+    public CreateProductCategoryDto()
     {
-        RuleFor(x => x.Name)
-            .NotEmpty();
     }
-}
+
+    public CreateProductCategoryDto(string name)
+    {
+        Name = name;
+    }
+};
+
+public sealed record UpdateProductCategoryDto
+{
+    public string Name { get; set; }
+
+    public UpdateProductCategoryDto()
+    {
+    }
+
+    public UpdateProductCategoryDto(string name)
+    {
+        Name = name;
+    }
+};

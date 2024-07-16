@@ -1,0 +1,85 @@
+@using EY.CoffeeManagement.App.Application.Dtos
+@using EY.CoffeeManagement.App.Application.Services.DomainServices.Contracts
+@inject IProductCategoryService _categoryService
+@inject ToastService _toast
+
+<div class="row">
+
+    <div class="row  justify-content-center flex">
+        <div class="col">
+
+            <EditForm
+                Model="_model"
+                OnValidSubmit="Save">
+                <FluentValidationValidator></FluentValidationValidator>
+                <div class="form-group">
+                    <label for="productCategory">Ürün Kategorisi</label>
+                    <InputText class="form-control" @bind-Value="_model.Name"/>
+                    <ValidationMessage For="() => _model.Name" class="text-danger"/>
+                </div>
+                <div class="form-group justify-content space-between">
+                    <Button Type="ButtonType.Submit" Class="btn btn-success" Disabled="_isSaving"> Güncelle <Spinner Type="SpinnerType.Dots" Size="SpinnerSize.Small" Visible="@(_isSaving)"></Spinner></Button>
+                    <Button @onclick="Delete" Class="btn btn-danger">
+                        Sil
+                    </Button>
+                </div>
+            </EditForm>
+
+        </div>
+    </div>
+</div>
+
+<ConfirmDialog @ref="_confirm"></ConfirmDialog>
+
+@code {
+    private bool _isSaving = false;
+    private UpdateProductCategoryDto _model = new();
+    private ConfirmDialog _confirm = default!;
+    [Parameter] public Guid ProductCategoryId { get; set; }
+    [Parameter] public string ProductCategoryName { get; set; }
+    [Parameter] public EventCallback Close { get; set; }
+    [Parameter] public EventCallback AfterSave { get; set; }
+
+    private async Task Delete()
+    {
+        bool confirmation = await _confirm.ShowAsync("Dikkat", "Kategoriyi silmek üzeresiniz.", new ConfirmDialogOptions
+        {
+            Dismissable = true,
+            YesButtonText = "Sil",
+            NoButtonText = "İptal",
+        });
+
+        if (confirmation)
+        {
+            await _categoryService.DeleteAsync(ProductCategoryId);
+            await AfterSave.InvokeAsync();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _model.Name = ProductCategoryName;
+        StateHasChanged();
+    }
+
+
+    private async Task Save()
+    {
+        _isSaving = true;
+        StateHasChanged();
+        var result = await _categoryService.UpdateAsync(ProductCategoryId, _model, cancellationToken: CancellationToken.None);
+        if (result.IsSuccess)
+        {
+            _toast.Notify(new ToastMessage(ToastType.Success, "Güncelleme başarılı!"));
+        }
+        else
+        {
+            _toast.Notify(new ToastMessage(ToastType.Danger, "Güncelleme başarısız!"));
+        }
+
+        _isSaving = false;
+        await AfterSave.InvokeAsync();
+        StateHasChanged();
+    }
+
+}

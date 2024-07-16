@@ -32,7 +32,9 @@
         {
             new NavItem { Id = "1", Href = "/getting-started", IconName = IconName.HouseDoorFill, Text = "Getting Started" },
 
-            new NavItem { Id = "2", Href = "ProductCategories", IconName = IconName.Backspace, Text = "Ürün Kategorileri" }
+            new NavItem { Id = "2", IconName = IconName.Activity, Text = "Yönetim" },
+            new NavItem { Id = "3", Href = "ProductCategories", IconName = IconName.Backspace, Text = "Ürün Kategorileri", ParentId = "2" },
+            new NavItem { Id = "4", Href = "Products", IconName = IconName.Backspace, Text = "Ürünler", ParentId = "2" },
         };
 
         return navItems;

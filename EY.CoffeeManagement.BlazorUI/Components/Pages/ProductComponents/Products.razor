@@ -1,0 +1,51 @@
+@page "/Products"
+@using EY.CoffeeManagement.App.Application.Dtos
+@using EY.CoffeeManagement.App.Application.Dtos.BaseDtos
+@using EY.CoffeeManagement.App.Application.Services.DomainServices.Contracts
+@inject IProductService _productService
+<div class="my-4 row justify-content-start">
+    <div class="col">
+        <a href="/Products/Create" class="btn btn-primary"> Yeni Ekle</a>
+        / Table
+        / güncelle sil.
+
+        <Grid TItem="ListProductDto"
+              DataProvider="FetchData"
+              PageSizeSelectorVisible="true"
+              PageSize="5"
+              AllowPaging="true"
+              AllowSelection="true"
+              Responsive="true"
+              Class="table table-bordered table-hover"
+              SelectionMode="GridSelectionMode.Single"
+
+              PageSizeSelectorItems="@(new[] { 5, 10, 15, 25 })">
+            <GridColumn TItem="ListProductDto"
+                        PropertyName="@(nameof(ListProductDto.Name))"
+                        HeaderText="Ürün Adı">
+                @context.Name
+            </GridColumn>
+            <GridColumn TItem="ListProductDto"
+                        PropertyName="@(nameof(ListProductDto.Price))"
+                        HeaderText="Ürün Fiyatı">
+                @(Math.Round(context.Price, 2))
+            </GridColumn>
+        </Grid>
+    </div>
+</div>
+
+@code {
+    Grid<ListProductDto> _grid;
+
+    private async Task<GridDataProviderResult<ListProductDto>> FetchData(GridDataProviderRequest<ListProductDto> request)
+    {
+        var results = await _productService.PaginateAsync<ListProductDto>(new PaginateRequest(request.PageNumber, request.PageSize));
+
+        return new GridDataProviderResult<ListProductDto>
+        {
+            Data = results.Value.list,
+            TotalCount = results.Value.totalCount
+        };
+    }
+
+}

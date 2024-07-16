@@ -5,117 +5,79 @@
 @using EY.CustomResult
 @inject ToastService _toast
 @inject IProductCategoryService _productCategoryService
-<div class="container justify-content-start">
-    <div class="row">
+<div class="py-4 justify-content-start">
+    <div class="mb-2 row">
         <div class="col">
             <button class="btn btn-primary" @onclick="OpenCreateCanvas">Yeni Ekle</button>
         </div>
-        @if (selectedProductcategoryDto is not null)
-        {
-            <div class="col">
-                <button class="btn btn-secondary" @onclick="OpenUpdateCanvas">@($"{selectedProductcategoryDto.Name}") Güncelle</button>
-            </div>
-        }
-
-        <div class="col">
-            <button class="btn btn-default" @onclick="() => DataProvider(null)">
-                Verileri Güncelle <Icon Name="IconName.ArrowClockwise"></Icon>
-            </button>
-        </div>
-
     </div>
     <div class="row">
         <div class="col">
-            <Grid TItem="ListProductCategoryDto"
-                  Class="table table-bordered table-hover"
-                  AllowFiltering="true"
-                  AllowPaging="true"
-                  AllowSelection="true"
-                  SelectionMode="GridSelectionMode.Single"
-                  Responsive="true"
-                  DataProvider="DataProvider"
-                  PageSizeSelectorVisible="true"
-                  EmptyText="Kategori yok"
-                  AutoHidePaging="true"
-                  PageSizeSelectorItems="@(new[] { 5, 10, 15, 25 })">
+            <Grid
+                @ref="_grid"
+                TItem="ListProductCategoryDto"
+                Class="table table-bordered table-hover"
+                AllowFiltering="true"
+                AllowPaging="true"
+                AllowSelection="true"
+                SelectionMode="GridSelectionMode.Single"
+                Responsive="true"
+                DataProvider="DataProvider"
+                PageSizeSelectorVisible="true"
+                EmptyText="Kategori yok"
+                PageSizeSelectorItems="@(new[] { 5, 10, 15, 25 })"
+                SelectedItemsChanged="Select"
+                Height="400">
                 <GridColumns>
-                    <GridColumn TItem="ListProductCategoryDto"
-                                HeaderText="Id"
-                                PropertyName="@(nameof(ListProductCategoryDto.id))"
-                                Filterable="true"
-                                FilterOperator="FilterOperator.Equals">
-                        @context.id
-                    </GridColumn>
                     <GridColumn
                         TItem="ListProductCategoryDto"
                         HeaderText="Kategori Adı"
-                        PropertyName="@(nameof(ListProductCategoryDto.Name))"
-                        Filterable="true"
 
-                        FilterOperator="FilterOperator.Contains">
+                        PropertyName="@(nameof(ListProductCategoryDto.Name))">
                         @context.Name
                     </GridColumn>
                 </GridColumns>
             </Grid>
-            @* <DataTable TModel="ListProductCategoryDto" *@
-            @*            UsePaging="@true" *@
-            @*            IsLoading="isTableLoading" *@
-            @*            PageCount="@(_productCategoryList?.TotalPage ?? 0)" *@
-            @*            Items="@(_productCategoryList?.list.ToList() ?? [])" *@
-            @*            FetchData="FetchData" *@
-            @*            ShowHeaderFilters="@true" *@
-            @*            PageSizeList="@(new List<int> { 1, 2, 3, 4, 5 })" *@
-            @*            PageNumber="@(_productCategoryList?.page ?? 1)" *@
-            @*            PageSize="@(_productCategoryList?.size ?? 5)" *@
-            @*            IncludeSearchButton="true" *@
-            @*            RowClickedEvent="Select" *@
-            @*            CssClass="table table-bordered table-hover"> *@
-            @*     <DataTableColumn *@
-            @*         TModel="ListProductCategoryDto" *@
-            @*         Property="x => x.id" *@
-            @*         CustomTitle="Ürün id"> *@
-            @*     </DataTableColumn> *@
-            @* *@
-            @*     <DataTableColumn *@
-            @*         TModel="ListProductCategoryDto" *@
-            @*         Property="x => x.Name" *@
-            @*         IsFilterable="@true" *@
-            @*         CustomTitle="Ürün Adı"> *@
-            @*     </DataTableColumn> *@
-            @* *@
-            @* </DataTable> *@
 
         </div>
+
+        @if (selectedProductcategoryDto is not null)
+        {
+            <UpdateProductCategoryComponent
+                AfterSave="async () => { await _grid.RefreshDataAsync(); }"
+                ProductCategoryName="@selectedProductcategoryDto.Name"
+                Close="() => { selectedProductcategoryDto = null; }" ProductCategoryId="selectedProductcategoryDto!.id"/>
+        }
     </div>
 </div>
 
-<Offcanvas @ref="canvas" Placement="Placement.Start">
-</Offcanvas>
+<Offcanvas
+    OnHidden="async () => await _grid.RefreshDataAsync()"
+    @ref="canvas"
+    Placement="Placement.End"/>
 
 
 @code {
-    private int _defaultPageSize = 5;
     private Offcanvas canvas = default!;
-    private bool canvasOpened = false;
-    private bool isTableLoading = true;
     ListProductCategoryDto? selectedProductcategoryDto = null;
+    Grid<ListProductCategoryDto> _grid;
 
-    private void Select(ListProductCategoryDto selected)
+
+    private void Select(HashSet<ListProductCategoryDto> selected)
     {
-        selectedProductcategoryDto = selected;
+        if (selected.Count == 0)
+        {
+            selectedProductcategoryDto = null;
+            return;
+        }
+
+        selectedProductcategoryDto = selected.First();
+        StateHasChanged();
     }
 
-    private async Task<GridDataProviderResult<ListProductCategoryDto>> DataProvider(GridDataProviderRequest<ListProductCategoryDto>? request)
+    private async Task<GridDataProviderResult<ListProductCategoryDto>> DataProvider(GridDataProviderRequest<ListProductCategoryDto> request)
     {
-        Result<PaginateResponse<ListProductCategoryDto>>? result;
-        if (request is null)
-        {
-            result = await _productCategoryService.PaginateAsync<ListProductCategoryDto>(new PaginateRequest(1, _defaultPageSize));
-        }
-        else
-        {
-            result = await _productCategoryService.PaginateAsync<ListProductCategoryDto>(new PaginateRequest(request.PageNumber, request.PageSize));
-        }
+        Result<PaginateResponse<ListProductCategoryDto>>? result = await _productCategoryService.PaginateAsync<ListProductCategoryDto>(new PaginateRequest(request.PageNumber, request.PageSize));
 
         return new GridDataProviderResult<ListProductCategoryDto>
         {
@@ -124,30 +86,10 @@
         };
     }
 
-    private async Task OpenUpdateCanvas()
-    {
-        if (selectedProductcategoryDto is null)
-        {
-            _toast.Notify(new ToastMessage(ToastType.Danger, nameof(IconName.ExclamationCircle), "Ürün kategorisi seçilmedi", "Önce bir ürün kategorisi seçmeniz gerekmektedir!"));
-            return;
-        }
-
-        canvas.Placement = Placement.End;
-
-        await canvas.ShowAsync<AddOrUpdateProductCategoryComponent>("Kategori güncelle", new Dictionary<string, object>
-        {
-            { nameof(AddOrUpdateProductCategoryComponent.ProductCategoryId), selectedProductcategoryDto.id }
-        });
-    }
 
     private async Task OpenCreateCanvas()
     {
-        canvas.Placement = Placement.End;
-
-        await canvas.ShowAsync<AddOrUpdateProductCategoryComponent>("Yeni Kategori ekle", new Dictionary<string, object>
-        {
-            { nameof(AddOrUpdateProductCategoryComponent.ProductCategoryId), null }
-        });
+        await canvas.ShowAsync<AddProductCategoryComponent>("Yeni Kategori ekle");
     }
 
 

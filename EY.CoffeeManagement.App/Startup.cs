@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Reflection;
 using EY.CoffeeManagement.App.Application.Services.DomainServices.Concretes;
 using EY.CoffeeManagement.App.Application.Services.DomainServices.Contracts;
@@ -16,18 +17,21 @@ public static class Startup
     {
         Assembly currentAssembly = typeof(Startup).Assembly;
 
-        services.AddDbContext<CoffeeManagementContext>(opt => opt.UseNpgsql(configuration.GetConnectionString("Postgre")));
+        // Change service lifetime!
+        services.AddDbContext<CoffeeManagementContext>(opt => opt.UseNpgsql(configuration.GetConnectionString("Postgre")), ServiceLifetime.Transient);
 
 
         #region Services
 
         services.AddScoped<IProductCategoryService, ProductCategoryService>();
+        services.AddScoped<IProductService, ProductService>();
 
         #endregion
 
         #region FluentValidation
 
         services.AddValidatorsFromAssembly(currentAssembly);
+        ValidatorOptions.Global.LanguageManager.Culture = new CultureInfo("tr-tr");
 
         #endregion
 

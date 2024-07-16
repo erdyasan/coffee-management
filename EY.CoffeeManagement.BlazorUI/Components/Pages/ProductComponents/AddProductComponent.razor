@@ -1,0 +1,90 @@
+@page "/Products/Create"
+@using EY.CoffeeManagement.App.Application.Dtos
+@using EY.CoffeeManagement.App.Application.Dtos.BaseDtos
+@using EY.CoffeeManagement.App.Application.Services.DomainServices.Contracts
+@using EY.CoffeeManagement.BlazorUI.Extensions
+@inject IProductCategoryService _productCategoryService
+@inject IProductService _productService
+@inject ToastService _toast
+<div class="row">
+    <div class="col">
+        <EditForm
+            Model="_model"
+            OnValidSubmit="Save">
+            <FluentValidationValidator DisableAssemblyScanning="true"/>
+            <div class="form-group mt-2">
+                <label for="productName">Ürün Adı</label>
+                <InputText class="form-control" id="productName" @bind-Value="_model.Name"></InputText>
+                <ValidationMessage class="text-danger" For="() => _model.Name"/>
+            </div>
+            <div class="form-group mt-2">
+                <label for="productDescription">Ürün Açıklaması</label>
+                <InputTextArea @bind-Value="_model.Description" class="form-control" id="productDescription"/>
+            </div>
+            <div class="form-group mt-2">
+                <label for="productPrice">Ürün Fiyatı</label>
+                <InputNumber id="productPrice" class="form-control" step="0.01" @bind-Value="_model.Price"/>
+            </div>
+            <div class="form-group mt-2">
+                <InputSelect class="form-control" @bind-Value="_model.ProductCategoryId">
+                    @foreach (var p in _productCategories)
+                    {
+                        <option value="@p.id"> @p.Name</option>
+                    }
+                </InputSelect>
+                <ValidationMessage class="text-danger" For="() => _model.ProductCategoryId"/>
+            </div>
+            <div class="form-group mt-2">
+                <button class="btn btn-success" type="submit">Kaydet</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private bool isProcessing = false;
+    private CreateProductDto _model = new();
+    List<ListProductCategoryDto> _productCategories = new List<ListProductCategoryDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        isProcessing = true;
+        var categories = await _productCategoryService.PaginateAsync<ListProductCategoryDto>(new PaginateRequest(1, int.MaxValue));
+
+        if (categories.IsSuccess)
+        {
+            _productCategories.AddRange(categories.Value.list);
+        }
+
+        isProcessing = false;
+    }
+
+    private async Task Save()
+    {
+        if (isProcessing)
+        {
+            return;
+        }
+
+        isProcessing = true;
+        StateHasChanged();
+
+
+        var result = await _productService.CreateAsync(_model);
+        if (result.IsSuccess)
+        {
+            _toast.Success();
+        }
+        else
+        {
+            _toast.Error();
+        }
+
+        _model.Name = "";
+        _model.Description = "";
+        _model.Price = 0;
+        isProcessing = false;
+        StateHasChanged();
+    }
+
+}
