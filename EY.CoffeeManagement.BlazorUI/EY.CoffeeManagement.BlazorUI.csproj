@@ -17,6 +17,7 @@
     <ItemGroup>
       <PackageReference Include="Blazor.Bootstrap" Version="3.0.0-preview.2" />
       <PackageReference Include="Blazored.FluentValidation" Version="2.2.0" />
+      <PackageReference Include="Radzen.Blazor" Version="4.34.0" />
     </ItemGroup>
 
     <ItemGroup>
