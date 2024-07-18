@@ -1,0 +1,104 @@
+﻿@using EY.CoffeeManagement.App.Application.Dtos.DeskCategoryDtos
+@using EY.CoffeeManagement.App.Application.Services.DomainServices.Contracts
+@using EY.CoffeeManagement.BlazorUI.Components.Shared
+@using EY.CoffeeManagement.BlazorUI.Extensions
+@using ButtonSize = Radzen.ButtonSize
+@using ButtonType = Radzen.ButtonType
+@using Orientation = Radzen.Orientation
+@inject IDeskCategoryService _deskCategory
+@inject ToastService _toast
+@inject DialogService _dialog
+<RadzenCard>
+    <LoadingComponent>
+        <RadzenStack>
+            @if (_model != null)
+            {
+                <EditForm Model="_model"
+                          OnValidSubmit="Update">
+                    <FluentValidationValidator DisableAssemblyScanning="true"/>
+                    <RadzenStack Orientation="Orientation.Vertical">
+                        <ValidationMessage For="() => _model.Name"/>
+                        <RadzenFormField Text="Kategori Adı">
+                            <RadzenTextBox @bind-Value="_model.Name"/>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Öncelik Sırası">
+                            <ValidationMessage For="() => _model.SortOrder"/>
+                            <RadzenNumeric TValue="int" @bind-Value="_model.SortOrder"/>
+                        </RadzenFormField>
+                        <RadzenFormField>
+                            <RadzenButton ButtonStyle="ButtonStyle.Success" Style="width: 100%" ButtonType="ButtonType.Submit" Text="Güncelle"
+                                          Disabled="isUpdating">
+                                <RadzenText Text="Güncelle"></RadzenText>
+                                @if (isUpdating)
+                                {
+                                    <Spinner Size="SpinnerSize.Small"></Spinner>
+                                }
+                            </RadzenButton>
+                        </RadzenFormField>
+                    </RadzenStack>
+                </EditForm>
+            }
+        </RadzenStack>
+        <RadzenStack>
+            <RadzenButton Text="Sil" Click="Delete" Icon="exclamation-circle" Size="ButtonSize.Small"></RadzenButton>
+        </RadzenStack>
+    </LoadingComponent>
+</RadzenCard>
+
+@code {
+    private bool isLoading = true;
+    private bool isUpdating = false;
+    private UpdateDeskCategoryDto? _model;
+
+    [Parameter] public Guid DeskCategoryId { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var model = await _deskCategory.DetailAsync<UpdateDeskCategoryDto>(DeskCategoryId);
+
+        if (model.IsSuccess)
+        {
+            _model = model.Value;
+        }
+
+        isLoading = false;
+        StateHasChanged();
+    }
+
+
+    private async Task Update()
+    {
+        isUpdating = true;
+        StateHasChanged();
+
+        var updateResult = await _deskCategory.UpdateAsync(DeskCategoryId, _model!);
+
+
+        _toast.NotifyByResult(updateResult.IsSuccess);
+
+        isUpdating = false;
+        // if (AfterUpdate.HasDelegate)
+        // {
+        //     await AfterUpdate.InvokeAsync();
+        // }
+
+        StateHasChanged();
+    }
+
+    private async Task Delete()
+    {
+        var result = await _dialog.Confirm(title: "Dikkat", message: "Masa kategorisi silerseniz, masaları görüntüleyemezsiniz.", options: new ConfirmOptions
+        {
+            CancelButtonText = "İptal",
+            Draggable = false,
+            OkButtonText = "Sil",
+        });
+        if (result is true)
+        {
+            var deleteResult = await _deskCategory.DeleteAsync(DeskCategoryId);
+            _toast.NotifyByResult(deleteResult.IsSuccess);
+        }
+    }
+
+}

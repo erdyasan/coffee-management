@@ -16,3 +16,19 @@ public sealed class CreateProductDtoValidator : AbstractValidator<CreateProductD
             .WithMessage("Geçerli bir kategori seçiniz.");
     }
 }
+
+public sealed class UpdateProductDtoValidator : AbstractValidator<UpdateProductDto>
+{
+    public UpdateProductDtoValidator()
+    {
+        RuleFor(x => x.Name)
+            .NotEmpty();
+        RuleFor(x => x.ProductCategoryId)
+            .NotEmpty()
+            .Must(x => x != Guid.Empty);
+        RuleFor(x => x.Description)
+            .NotNull();
+        RuleFor(x => x.Price)
+            .Must(x => x > 0);
+    }
+}

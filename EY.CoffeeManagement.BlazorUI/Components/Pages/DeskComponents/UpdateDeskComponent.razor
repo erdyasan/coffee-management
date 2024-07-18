@@ -1,0 +1,91 @@
+﻿@using EY.CoffeeManagement.App.Application.Dtos.DeskDtos
+@using EY.CoffeeManagement.App.Application.Services.DomainServices.Contracts
+@using EY.CoffeeManagement.BlazorUI.Extensions
+@using Orientation = Radzen.Orientation
+@using ButtonType = Radzen.ButtonType
+@inject IDeskService _deskService
+@inject ToastService _toastService
+@inject DialogService _dialogService
+<RadzenCard>
+    <EditForm Model="_model"
+              OnValidSubmit="Submit">
+        <FluentValidationValidator DisableAssemblyScanning="true"/>
+        <RadzenStack>
+            <RadzenFormField Text="Masa Adı">
+                <RadzenStack Orientation="Orientation.Vertical">
+                    <ValidationMessage class="alert alert-danger text-sm" role="alert" For="() => _model.Name"/>
+                    <RadzenTextBox @bind-Value="_model.Name"/>
+                </RadzenStack>
+            </RadzenFormField>
+            <ValidationMessage For="() => _model.SortOrder"/>
+            <RadzenFormField Text="Öncelik Sırası">
+                <RadzenNumeric TValue="int" Step="1" @bind-Value="_model.SortOrder"></RadzenNumeric>
+            </RadzenFormField>
+            <RadzenFormField>
+                <RadzenStack Orientation="Orientation.Vertical">
+
+                    <RadzenButton ButtonType="ButtonType.Submit">
+                        Kaydet
+                        @if (isSaving)
+                        {
+                            <Spinner/>
+                        }
+                    </RadzenButton>
+                    <RadzenButton Text="Sil" Click="Delete" ButtonStyle="ButtonStyle.Danger" Disabled="isDeleting"/>
+                </RadzenStack>
+            </RadzenFormField>
+        </RadzenStack>
+
+    </EditForm>
+</RadzenCard>
+
+@code {
+
+    private bool isSaving = false;
+    private bool isDeleting = false;
+    private UpdateDeskDto _model = new();
+    [Parameter] public Guid DeskId { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isSaving = true;
+        var deskResult = await _deskService.DetailAsync<UpdateDeskDto>(DeskId);
+        if (deskResult.IsSuccess)
+        {
+            _model = deskResult.Value;
+        }
+
+        isSaving = false;
+        await base.OnParametersSetAsync();
+    }
+
+    private async Task Delete()
+    {
+        isDeleting = true;
+        StateHasChanged();
+        ;
+        var deleteConfirmation = await _dialogService.Confirm("Dikkat!", "Masayı silerseniz masaya ait siparişleri görüntüleyemezsiniz.");
+
+        if (deleteConfirmation is true)
+        {
+            var deleteResult = await _deskService.DeleteAsync(DeskId);
+            _toastService.NotifyByResult(deleteResult.IsSuccess);
+        }
+
+        isDeleting = false;
+        StateHasChanged();
+    }
+
+    private async Task Submit()
+    {
+        isSaving = true;
+        StateHasChanged();
+
+        var saveResult = await _deskService.UpdateAsync(DeskId, _model);
+        _toastService.NotifyByResult(saveResult.IsSuccess);
+
+        isSaving = false;
+        StateHasChanged();
+    }
+
+}

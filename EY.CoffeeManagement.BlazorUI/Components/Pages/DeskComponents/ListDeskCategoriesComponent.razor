@@ -1,0 +1,60 @@
+﻿@using EY.CoffeeManagement.App.Application.Dtos.BaseDtos
+@using EY.CoffeeManagement.App.Application.Dtos.DeskCategoryDtos
+@using EY.CoffeeManagement.App.Application.Services.DomainServices.Contracts
+@using EY.CoffeeManagement.BlazorUI.Components.Shared
+@inject IDeskCategoryService _deskCategoryService
+
+<RadzenCard>
+    <LoadingComponent IsLoading="isLoading">
+        <RadzenListBox
+            @ref="_listBox"
+            Style="width: 100%; height: 200px"
+            TValue="ListDeskCategoryDto"
+            Data="_deskCategories"
+            LoadData="LoadData"
+            Change="ItemSelected"
+            ValueProperty=@(nameof(ListDeskCategoryDto.Id))
+            TextProperty="@(nameof(ListDeskCategoryDto.Name))">
+        </RadzenListBox>
+    </LoadingComponent>
+</RadzenCard>
+
+@code {
+    private bool isLoading = true;
+    private IEnumerable<ListDeskCategoryDto> _deskCategories;
+    [Parameter] public EventCallback<ListDeskCategoryDto> OnItemSelect { get; set; }
+    private RadzenListBox<ListDeskCategoryDto> _listBox;
+
+    private async Task LoadData(LoadDataArgs args)
+    {
+        var categoriesResult = await _deskCategoryService.PaginateAsync<ListDeskCategoryDto>(new PaginateRequest(1, int.MaxValue));
+        if (categoriesResult.IsSuccess)
+        {
+            _deskCategories = categoriesResult.Value.list.OrderBy(x => x.SortOrder);
+        }
+
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    public async Task Refresh()
+    {
+        await _listBox.LoadData!.InvokeAsync();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData(new LoadDataArgs());
+        await base.OnInitializedAsync();
+    }
+
+    private async Task ItemSelected(object dto)
+    {
+        bool valueParsedGuid = Guid.TryParse(dto.ToString(), out Guid itemId);
+        if (valueParsedGuid && OnItemSelect.HasDelegate)
+        {
+            await OnItemSelect.InvokeAsync(_deskCategories.First(x => x.Id == itemId));
+        }
+    }
+
+}

@@ -45,6 +45,11 @@
                                       Title="Fiyat"
                                       TextAlign="TextAlign.Center"/>
                 <RadzenDataGridColumn TItem="ListProductDto" Property="@(nameof(ListProductDto.Category))" TextAlign="TextAlign.Center" Title="Kategori"/>
+                <RadzenDataGridColumn >
+                    <Template Context="data">
+                        <RadzenButton Click="@(async () => await OpenUpdateModal(data.Id))" Text="Güncelle" ButtonStyle="ButtonStyle.Success"/>
+                    </Template>
+                </RadzenDataGridColumn>
             </Columns>
         </RadzenDataGrid>
     </RadzenStack>
@@ -95,6 +100,15 @@
     private async Task OpenAddProductModal()
     {
         _ = await _dialogService.OpenAsync<AddProductComponent>("Yeni Ürün Ekle");
+        await _grid.RefreshDataAsync();
+    }
+
+    private async Task OpenUpdateModal(Guid productId)
+    {
+        await _dialogService.OpenAsync<UpdateProductComponent>("Ürünü Güncelle", new Dictionary<string, object>
+        {
+            { nameof(UpdateProductComponent.ProductId), productId }
+        });
         await _grid.RefreshDataAsync();
     }
 

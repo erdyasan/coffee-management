@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Reflection;
 using EY.CoffeeManagement.App.Application.Services.DomainServices.Concretes;
 using EY.CoffeeManagement.App.Application.Services.DomainServices.Contracts;
+using EY.CoffeeManagement.App.Domain.DeskEntities;
 using EY.CoffeeManagement.App.Infrastructure.Persistence;
 using FluentValidation;
 using Mapster;
@@ -25,6 +26,8 @@ public static class Startup
 
         services.AddScoped<IProductCategoryService, ProductCategoryService>();
         services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IDeskCategoryService, DeskCategoryService>();
+        services.AddScoped<IDeskService, DeskService>();
 
         #endregion
 

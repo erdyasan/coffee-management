@@ -1,0 +1,62 @@
+﻿@using EY.CoffeeManagement.App.Application.Dtos.DeskCategoryDtos
+@using EY.CoffeeManagement.App.Application.Services.DomainServices.Contracts
+@using EY.CoffeeManagement.BlazorUI.Extensions
+@using Orientation = Radzen.Orientation
+@using ButtonType = Radzen.ButtonType
+@inject ToastService _toast
+@inject IDeskCategoryService _deskCategoryService
+<RadzenCard>
+    <EditForm
+        Model="_model"
+        OnValidSubmit="Submit">
+        <FluentValidationValidator DisableAssemblyScanning="true"/>
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenStack Orientation="Orientation.Vertical">
+                <ValidationMessage class="alert alert-danger" For="() => _model.Name"/>
+                <RadzenFormField Text="Kategori Adı">
+                    <RadzenTextBox @bind-Value="_model.Name"/>
+                </RadzenFormField>
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Vertical">
+
+                <ValidationMessage class="alert alert-danger" role="alert" For="() => _model.SortOrder"/>
+                <RadzenAlert Size="AlertSize.ExtraSmall" AlertStyle="AlertStyle.Info" Text="Düşük öncelik sırası daha önde gösterilir."/>
+
+                <RadzenFormField Text="Öncelik Sırası">
+                    <RadzenNumeric TValue="int" Step="1" Min="1" @bind-Value="_model.SortOrder"/>
+                </RadzenFormField>
+            </RadzenStack>
+            <RadzenStack>
+                <RadzenFormField>
+                    <RadzenButton Disabled="isSaving" ButtonType="ButtonType.Submit" Text="Kaydet"></RadzenButton>
+                </RadzenFormField>
+            </RadzenStack>
+        </RadzenStack>
+    </EditForm>
+
+</RadzenCard>
+
+@code {
+    private CreateDeskCategoryDto _model = new();
+    private bool isSaving = false;
+    [Parameter] public EventCallback AfterSave { get; set; }
+
+    private async Task Submit()
+    {
+        isSaving = true;
+        StateHasChanged();
+
+        var saveResult = await _deskCategoryService.CreateAsync(_model);
+
+        _toast.NotifyByResult(saveResult.IsSuccess);
+        isSaving = false;
+        if (AfterSave.HasDelegate)
+        {
+            await AfterSave.InvokeAsync();
+        }
+
+        StateHasChanged();
+        ;
+    }
+
+}

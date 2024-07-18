@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace EY.CoffeeManagement.App.Application.Services.DomainServices.Concretes;
 
-public sealed class ProductService : BaseService<Product>, IProductService
+internal sealed class ProductService : BaseService<Product>, IProductService
 {
     public ProductService(IServiceScopeFactory serviceScopeFactory, CoffeeManagementContext context) : base(serviceScopeFactory, context)
     {

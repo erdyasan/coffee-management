@@ -1,0 +1,16 @@
+﻿@using Orientation = Radzen.Orientation
+@if (IsLoading)
+{
+    <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center">
+        <Spinner Title="Yükleniyor..."/>
+    </RadzenStack>
+}
+else
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public RenderFragment ChildContent { get; set; }
+}

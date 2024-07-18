@@ -1,0 +1,126 @@
+﻿@page "/Desks"
+@using EY.CoffeeManagement.App.Application.Dtos.DeskCategoryDtos
+@using EY.CoffeeManagement.App.Application.Dtos.DeskDtos
+@using Orientation = Radzen.Orientation
+<RadzenCard class="mb-4">
+    <RadzenStack>
+        <RadzenBreadCrumb>
+            <RadzenBreadCrumbItem Text="Anasayfa" Path="/"/>
+            <RadzenBreadCrumbItem Text="Masalar" Path="/Desks"/>
+        </RadzenBreadCrumb>
+        <RadzenText Text="Masalar sayfası"></RadzenText>
+    </RadzenStack>
+</RadzenCard>
+
+<RadzenCard>
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="4">
+            <CreateDeskCategoryComponent AfterSave="AddedNewCategory"/>
+        </RadzenColumn>
+        <RadzenColumn Size=@(_selectedDeskCategory is null ? 8 : 4)>
+            <RadzenStack Orientation="Orientation.Vertical">
+                <RadzenAlert AlertStyle="AlertStyle.Info" Size="AlertSize.ExtraSmall" Text="Güncellemek için bir kategori seçiniz"/>
+                <ListDeskCategoriesComponent @ref="_listCategoriesComponent" OnItemSelect="SelectedDeskCategoryChanged"/>
+            </RadzenStack>
+        </RadzenColumn>
+        @if (_selectedDeskCategory is not null)
+        {
+            <RadzenColumn Size="4">
+                <UpdateDeskCategoryComponent AfterUpdate="AddedNewCategory"
+                                             DeskCategoryId="_selectedDeskCategory.Id"/>
+            </RadzenColumn>
+        }
+
+    </RadzenRow>
+
+</RadzenCard>
+
+<hr/>
+<RadzenCard>
+    <RadzenStack>
+        <RadzenRow>
+
+            @if (_selectedDeskCategory is null)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Info">
+                    Masaları görüntüleyebilmek için kategori seçmelisiniz.
+                </RadzenAlert>
+            }
+            else
+            {
+                <RadzenColumn>
+
+                    <CreateDeskComponent
+                        AfterSave="AddedNewDesk"
+                        DeskCategoryId="_selectedDeskCategory.Id"/>
+                </RadzenColumn>
+                <RadzenColumn>
+                    <RadzenStack Orientation="Orientation.Vertical">
+
+                        <RadzenButton Click="RefreshDesks" Text="Yenile"/>
+                        <ListDesksComponent
+                            @ref="_listDeskComponent"
+                            DeskSelectedCallBack="SelectedDeskChanged">
+                        </ListDesksComponent>
+                    </RadzenStack>
+                </RadzenColumn>
+                @if (_selectedDesk is not null)
+                {
+                    <RadzenColumn>
+                        <UpdateDeskComponent DeskId="_selectedDesk.Id"/>
+                    </RadzenColumn>
+                }
+            }
+        </RadzenRow >
+    </RadzenStack >
+</RadzenCard >
+
+@code {
+
+    private ListDeskCategoryDto? _selectedDeskCategory;
+    private ListDeskCategoriesComponent _listCategoriesComponent;
+    private ListDesksComponent _listDeskComponent;
+    private ListDeskDto? _selectedDesk;
+    private Func<Task>? _refreshDesks;
+    private bool isRefreshing = false;
+
+    private async Task DeskSelected(ListDeskDto deskDto)
+    {
+        _selectedDesk = deskDto;
+    }
+
+    private async Task AddedNewCategory()
+    {
+        await _listCategoriesComponent.Refresh();
+    }
+
+    private async Task SelectedDeskCategoryChanged(ListDeskCategoryDto? selectedDeskCategory)
+    {
+        _selectedDeskCategory = selectedDeskCategory;
+        StateHasChanged();
+    }
+
+    private async Task SelectedDeskChanged(ListDeskDto dto)
+    {
+        _selectedDesk = dto;
+    }
+
+    private async Task AddedNewDesk()
+    {
+        if (_refreshDesks is not null)
+            await _refreshDesks.Invoke();
+    }
+
+    private async Task RefreshDesks()
+    {
+        // TODO causing conflicts tasks resolve it
+        if (!isRefreshing)
+        {
+            isRefreshing = true;
+            await _listDeskComponent.Refresh();
+        }
+
+        isRefreshing = false;
+    }
+
+}

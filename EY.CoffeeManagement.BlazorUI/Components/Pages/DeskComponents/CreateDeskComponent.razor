@@ -1,0 +1,64 @@
+﻿@using EY.CoffeeManagement.App.Application.Dtos.DeskDtos
+@using EY.CoffeeManagement.App.Application.Services.DomainServices.Contracts
+@using EY.CoffeeManagement.BlazorUI.Extensions
+@using Orientation = Radzen.Orientation
+@using ButtonType = Radzen.ButtonType
+@inject IDeskService _deskService
+@inject ToastService _toast
+<RadzenCard >
+    <EditForm Model="_model"
+              OnValidSubmit="Submit">
+        <FluentValidationValidator DisableAssemblyScanning="true"/>
+        <RadzenStack>
+            <RadzenFormField Text="Masa Adı">
+                <RadzenStack Orientation="Orientation.Vertical">
+                    <ValidationMessage class="alert alert-danger text-sm" role="alert" For="() => _model.Name"/>
+                    <RadzenTextBox @bind-Value="_model.Name"/>
+                </RadzenStack>
+            </RadzenFormField>
+            <RadzenFormField Text="Öncelik Sırası">
+                <RadzenNumeric TValue="int" @bind-Value="_model.SortOrder"></RadzenNumeric>
+            </RadzenFormField>
+            <RadzenFormField>
+                <RadzenButton Disabled="isSaving" ButtonType="ButtonType.Submit">
+                    Kaydet
+                    @if (isSaving)
+                    {
+                        <Spinner/>
+                    }
+                </RadzenButton>
+            </RadzenFormField>
+        </RadzenStack>
+
+    </EditForm>
+</RadzenCard>
+
+@code {
+    [Parameter] public Guid DeskCategoryId { get; set; }
+    private CreateDeskDto _model = new();
+    private bool isSaving = false;
+
+    [Parameter] public EventCallback AfterSave { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        _model.DeskCategoryId = DeskCategoryId;
+    }
+
+    private async Task Submit()
+    {
+        isSaving = true;
+        StateHasChanged();
+        var createResult = await _deskService.CreateAsync(_model);
+        _toast.NotifyByResult(createResult.IsSuccess);
+
+        if (AfterSave.HasDelegate)
+        {
+            await AfterSave.InvokeAsync();
+        }
+
+        isSaving = false;
+        StateHasChanged();
+    }
+
+}

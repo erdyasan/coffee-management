@@ -78,12 +78,13 @@ public abstract class BaseService<T> : IBaseService where T : BaseEntity
     public virtual async Task<Result<TDetailDto>> DetailAsync<TDetailDto>(Guid id, CancellationToken cancellationToken = default)
     {
 #pragma warning disable CS8604 // Possible null reference argument.
-        return await _context
+        var result = await _context
             .Set<T>()
             .AsNoTracking()
             .Where(x => x.Id == id)
             .ProjectToType<TDetailDto>()
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+        return result;
 #pragma warning restore CS8604 // Possible null reference argument.
     }
 

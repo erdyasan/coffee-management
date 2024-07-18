@@ -1,0 +1,93 @@
+﻿@using EY.CoffeeManagement.App.Application.Dtos
+@using EY.CoffeeManagement.App.Application.Dtos.BaseDtos
+@using EY.CoffeeManagement.App.Application.Services.DomainServices.Contracts
+@using EY.CoffeeManagement.BlazorUI.Components.Shared
+@using EY.CoffeeManagement.BlazorUI.Extensions
+@using ButtonType = Radzen.ButtonType
+@inject IProductService _productService
+@inject ToastService _toastService
+@inject IProductCategoryService _productCategoryService
+
+<RadzenStack>
+    <LoadingComponent IsLoading="isLoading">
+        <EditForm Model="_model" OnValidSubmit="Submit">
+            <FluentValidationValidator DisableAssemblyScanning="true"/>
+
+            <RadzenStack>
+                <RadzenFormField Text="Ürün Adı">
+                    <RadzenTextBox @bind-Value="_model.Name" Trim="true"/>
+                    <ValidationMessage For="() => _model.Name"></ValidationMessage>
+                </RadzenFormField>
+                <RadzenFormField Text="Ürün Açıklaması">
+                    <RadzenTextArea @bind-Value="_model.Description"/>
+                </RadzenFormField>
+                <RadzenFormField Text="Ürün Fiyatı">
+                    <RadzenNumeric TValue="decimal" @bind-Value="_model.Price"/>
+                </RadzenFormField>
+                <RadzenFormField Text="Ürün Kategorisi">
+                    <RadzenDropDown
+                        TValue="ListProductCategoryDto"
+                        @bind-Value=@_selectedProductCategory
+                        Data="_productCategories"
+                        TextProperty="@(nameof(ListProductCategoryDto.Name))"
+                        SelectedItemChanged="ChangedDropDownValue">
+                    </RadzenDropDown>
+                </RadzenFormField>
+                <RadzenFormField>
+                    <RadzenButton Icon="save" Text="Güncelle" ButtonType="ButtonType.Submit" Disabled="isSaving"/>
+                </RadzenFormField>
+            </RadzenStack>
+        </EditForm>
+    </LoadingComponent>
+</RadzenStack>
+
+@code {
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private UpdateProductDto _model;
+    private IEnumerable<ListProductCategoryDto> _productCategories;
+    [Parameter] public Guid ProductId { get; set; }
+    private ListProductCategoryDto _selectedProductCategory;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var productResult = await _productService.DetailAsync<UpdateProductDto>(ProductId);
+        var productCategories = await _productCategoryService.PaginateAsync<ListProductCategoryDto>(new PaginateRequest(1, int.MaxValue));
+
+        if (productResult.IsSuccess)
+        {
+            _model = productResult.Value;
+        }
+
+        isLoading = false;
+
+        _productCategories = productCategories.Value.list;
+        _selectedProductCategory = productCategories.Value.list.First(x => x.id == _model.ProductCategoryId);
+        StateHasChanged();
+    }
+
+    private async Task Submit()
+    {
+        isSaving = true;
+        StateHasChanged();
+
+        var result = await _productService.UpdateAsync(ProductId, _model);
+        if (result.IsSuccess)
+        {
+            _toastService.Success();
+        }
+        else
+        {
+            _toastService.Error();
+        }
+
+        isSaving = false;
+        StateHasChanged();
+    }
+
+    private void ChangedDropDownValue(object dto)
+    {
+        _model.ProductCategoryId = ((ListProductCategoryDto)dto).id;
+    }
+
+}

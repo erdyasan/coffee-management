@@ -13,4 +13,16 @@ public static class ToastExtensions
     {
         toast.Notify(new ToastMessage(ToastType.Danger, "Başarısız", "İşlem gerçekleştirilirken hata oluştu!"));
     }
+
+    public static void NotifyByResult(this ToastService toast, bool isSuccess)
+    {
+        if (isSuccess)
+        {
+            toast.Success();
+        }
+        else
+        {
+            toast.Error();
+        }
+    }
 }

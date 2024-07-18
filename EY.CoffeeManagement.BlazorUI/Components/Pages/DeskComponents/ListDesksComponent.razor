@@ -1,0 +1,63 @@
+﻿@using EY.CoffeeManagement.App.Application.Dtos.BaseDtos
+@using EY.CoffeeManagement.App.Application.Dtos.DeskDtos
+@using EY.CoffeeManagement.App.Application.Services.DomainServices.Contracts
+@using EY.CoffeeManagement.BlazorUI.Components.Shared
+@inject IDeskService _deskService
+<RadzenStack>
+    <LoadingComponent IsLoading="isLoading">
+        <RadzenListBox
+            Data="_deskList"
+            Style="width: 100%; height: 300px"
+            LoadData="LoadData"
+            Change="DeskSelected"
+            ValueProperty="@(nameof(ListDeskDto.Id))"
+            TextProperty="@(nameof(ListDeskDto.Name))"
+            TValue="ListDeskDto">
+        </RadzenListBox>
+    </LoadingComponent>
+</RadzenStack>
+
+@code {
+    private bool isLoading = false;
+    private IEnumerable<ListDeskDto> _deskList;
+    private ListDeskDto _selectedDesk;
+    [Parameter] public EventCallback<ListDeskDto> DeskSelectedCallBack { get; set; }
+
+    private async Task LoadData(LoadDataArgs args)
+    {
+        isLoading = true;
+        StateHasChanged();
+        var allDesks = await _deskService.PaginateAsync<ListDeskDto>(new PaginateRequest(1, int.MaxValue));
+
+        if (allDesks.IsSuccess)
+        {
+            _deskList = allDesks.Value.list.OrderBy(x => x.SortOrder);
+        }
+        else
+        {
+            _deskList = Enumerable.Empty<ListDeskDto>();
+        }
+
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    public async Task Refresh()
+    {
+        await LoadData(new LoadDataArgs());
+    }
+
+    private async Task DeskSelected(object deskId)
+    {
+        bool deskIdParsed = Guid.TryParse(deskId.ToString(), out Guid parsedId);
+        if (deskIdParsed)
+        {
+            _selectedDesk = _deskList.First(x => x.Id == parsedId);
+            if (DeskSelectedCallBack.HasDelegate)
+            {
+                await DeskSelectedCallBack.InvokeAsync(_selectedDesk);
+            }
+        }
+    }
+
+}
