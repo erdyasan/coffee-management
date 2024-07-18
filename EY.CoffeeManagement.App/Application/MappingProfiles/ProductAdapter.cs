@@ -2,7 +2,7 @@ using EY.CoffeeManagement.App.Application.Dtos;
 using EY.CoffeeManagement.App.Domain.ProductEntities;
 using Mapster;
 
-namespace EY.CoffeeManagement.App.Application.Adapters;
+namespace EY.CoffeeManagement.App.Application.MappingProfiles;
 
 internal sealed class ProductAdapter : IRegister
 {
