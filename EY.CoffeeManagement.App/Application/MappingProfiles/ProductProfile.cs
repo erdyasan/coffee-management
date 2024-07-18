@@ -4,13 +4,16 @@ using Mapster;
 
 namespace EY.CoffeeManagement.App.Application.MappingProfiles;
 
-internal sealed class ProductAdapter : IRegister
+internal sealed class ProductProfile : IRegister
 {
     public void Register(TypeAdapterConfig config)
     {
         config
             .NewConfig<Product, DetailProductDto>()
             .Map(x => x.ProductCategoryId, x => x.ProductCategoryId)
-            .Map(x => x.ProdutCategoryName, x => x.Category.Name);
+            .Map(x => x.ProdutCategoryName, x => x.Category!.Name);
+
+        config.NewConfig<Product, ListProductDto>()
+            .Map(x => x.Category, x => x.Category!.Name);
     }
 }

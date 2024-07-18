@@ -89,17 +89,6 @@
         StateHasChanged();
     }
 
-    private async Task<GridDataProviderResult<ListProductCategoryDto>> DataProvider(GridDataProviderRequest<ListProductCategoryDto> request)
-    {
-        Result<PaginateResponse<ListProductCategoryDto>>? result = await _productCategoryService.PaginateAsync<ListProductCategoryDto>(new PaginateRequest(request.PageNumber, request.PageSize));
-
-        return new GridDataProviderResult<ListProductCategoryDto>
-        {
-            Data = result.Value.list,
-            TotalCount = result.Value.totalCount
-        };
-    }
-
 
     private async Task OpenCreateCanvas()
     {

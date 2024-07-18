@@ -2,40 +2,84 @@
 @using EY.CoffeeManagement.App.Application.Dtos
 @using EY.CoffeeManagement.App.Application.Dtos.BaseDtos
 @using EY.CoffeeManagement.App.Application.Services.DomainServices.Contracts
+@using Orientation = Radzen.Orientation
 @inject IProductService _productService
-<div class="my-4 row justify-content-start">
-    <div class="col">
-        <a href="/Products/Create" class="btn btn-primary"> Yeni Ekle</a>
-        / Table
-        / güncelle sil.
+@inject DialogService _dialogService
+<RadzenCard>
+    <RadzenStack>
+        <div class="alert alert-info" role="alert">
+            <p>
+                Ürün eklemek için en az bir (1) adet ürün kategorisi eklemelisiniz.
+            </p>
+        </div>
+    </RadzenStack>
+    <RadzenStack class="mb-4" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.Start" Orientation="Orientation.Horizontal">
+        <RadzenButton Text="Yeni Ekle" Click="OpenAddProductModal" ButtonStyle="ButtonStyle.Success"/>
 
-        <Grid TItem="ListProductDto"
-              DataProvider="FetchData"
-              PageSizeSelectorVisible="true"
-              PageSize="5"
-              AllowPaging="true"
-              AllowSelection="true"
-              Responsive="true"
-              Class="table table-bordered table-hover"
-              SelectionMode="GridSelectionMode.Single"
+    </RadzenStack>
+    <RadzenStack >
+        <RadzenDataGrid
+            @ref="_grid"
+            TItem="ListProductDto"
+            Data="_products"
+            LoadData="LoadData"
+            AllowPaging="true"
+            PageSizeOptions="@( [5, 10, 15, 25])"
+            AllowGrouping="true"
+            EmptyText="Ürün Yok"
+            SelectionMode="DataGridSelectionMode.Single"
+            AllowRowSelectOnRowClick="true"
+            val
+            RowSelect="Select"
+            RowDeselect="DeSelect"
+            Count="_count">
 
-              PageSizeSelectorItems="@(new[] { 5, 10, 15, 25 })">
-            <GridColumn TItem="ListProductDto"
-                        PropertyName="@(nameof(ListProductDto.Name))"
-                        HeaderText="Ürün Adı">
-                @context.Name
-            </GridColumn>
-            <GridColumn TItem="ListProductDto"
-                        PropertyName="@(nameof(ListProductDto.Price))"
-                        HeaderText="Ürün Fiyatı">
-                @(Math.Round(context.Price, 2))
-            </GridColumn>
-        </Grid>
-    </div>
-</div>
+            <Columns>
+                <RadzenDataGridColumn TItem="ListProductDto"
+                                      Property="@(nameof(ListProductDto.Name))"
+                                      Title="Ürün Adı"
+                                      TextAlign="TextAlign.Center">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="ListProductDto"
+                                      Property="@(nameof(ListProductDto.Price))"
+                                      Title="Fiyat"
+                                      TextAlign="TextAlign.Center"/>
+                <RadzenDataGridColumn TItem="ListProductDto" Property="@(nameof(ListProductDto.Category))" TextAlign="TextAlign.Center" Title="Kategori"/>
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenStack>
+</RadzenCard>
+<RadzenStack>
+    <RadzenCard></RadzenCard>
+</RadzenStack>
+
 
 @code {
-    Grid<ListProductDto> _grid;
+    private RadzenDataGrid<ListProductDto> _grid;
+    private IEnumerable<ListProductDto> _products;
+    private IEnumerable<ListProductDto> _selectedProducts = Enumerable.Empty<ListProductDto>();
+    private ListProductDto? _selected;
+    private int _count = 0;
+
+    private async Task Select(ListProductDto selected)
+    {
+        _selected = selected;
+    }
+
+    private async Task DeSelect(ListProductDto deSelect)
+    {
+        _selected = null;
+    }
+
+    private async Task LoadData(LoadDataArgs args)
+    {
+        var results = await _productService.PaginateAsync<ListProductDto>(PaginateRequest.FromSkip(args.Skip, args.Top));
+        if (results.IsSuccess)
+        {
+            _products = results.Value.list;
+            _count = results.Value.totalCount;
+        }
+    }
 
     private async Task<GridDataProviderResult<ListProductDto>> FetchData(GridDataProviderRequest<ListProductDto> request)
     {
@@ -46,6 +90,12 @@
             Data = results.Value.list,
             TotalCount = results.Value.totalCount
         };
+    }
+
+    private async Task OpenAddProductModal()
+    {
+        _ = await _dialogService.OpenAsync<AddProductComponent>("Yeni Ürün Ekle");
+        await _grid.RefreshDataAsync();
     }
 
 }

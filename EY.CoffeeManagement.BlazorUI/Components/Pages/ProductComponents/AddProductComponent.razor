@@ -3,60 +3,81 @@
 @using EY.CoffeeManagement.App.Application.Dtos.BaseDtos
 @using EY.CoffeeManagement.App.Application.Services.DomainServices.Contracts
 @using EY.CoffeeManagement.BlazorUI.Extensions
+@using Orientation = Radzen.Orientation
+@using ButtonType = Radzen.ButtonType
 @inject IProductCategoryService _productCategoryService
 @inject IProductService _productService
 @inject ToastService _toast
-<div class="row">
-    <div class="col">
-        <EditForm
-            Model="_model"
-            OnValidSubmit="Save">
-            <FluentValidationValidator DisableAssemblyScanning="true"/>
-            <div class="form-group mt-2">
-                <label for="productName">Ürün Adı</label>
-                <InputText class="form-control" id="productName" @bind-Value="_model.Name"></InputText>
-                <ValidationMessage class="text-danger" For="() => _model.Name"/>
-            </div>
-            <div class="form-group mt-2">
-                <label for="productDescription">Ürün Açıklaması</label>
-                <InputTextArea @bind-Value="_model.Description" class="form-control" id="productDescription"/>
-            </div>
-            <div class="form-group mt-2">
-                <label for="productPrice">Ürün Fiyatı</label>
-                <InputNumber id="productPrice" class="form-control" step="0.01" @bind-Value="_model.Price"/>
-            </div>
-            <div class="form-group mt-2">
-                <InputSelect class="form-control" @bind-Value="_model.ProductCategoryId">
-                    @foreach (var p in _productCategories)
-                    {
-                        <option value="@p.id"> @p.Name</option>
-                    }
-                </InputSelect>
-                <ValidationMessage class="text-danger" For="() => _model.ProductCategoryId"/>
-            </div>
-            <div class="form-group mt-2">
-                <button class="btn btn-success" type="submit">Kaydet</button>
-            </div>
-        </EditForm>
-    </div>
-</div>
+<EditForm Model="_model"
+          OnValidSubmit="Save">
+    <RadzenRow Gap="1rem">
+        <RadzenColumn>
+            <RadzenStack Orientation="Orientation.Vertical">
+                <FluentValidationValidator DisableAssemblyScanning="true"/>
+                <RadzenFormField Variant="Variant.Outlined"
+                                 Text="Ürün Adı">
+                    <RadzenTextBox Trim="true" @bind-Value="_model.Name"/>
+                </RadzenFormField>
+                <ValidationMessage role="alert" class="alert alert-danger" For="() => _model.Name"/>
+                <RadzenFormField Text="Ürün Açıklaması">
+                    <RadzenTextArea @bind-Value="_model.Description"/>
+                </RadzenFormField>
+                <RadzenFormField Variant="Variant.Outlined"
+                                 Text="Ürün Fiyatı">
+
+                    <RadzenNumeric @bind-Value="_model.Price" TValue="decimal" Min="0" Step="0.1" ShowUpDown="true"/>
+
+                </RadzenFormField>
+                <ValidationMessage role="alert" class="alert alert-danger" For="() => _model.Price"/>
+                <RadzenFormField Text="Ürün Kategorisi">
+                    <RadzenDropDown
+                        TValue="ListProductCategoryDto"
+                        Data="_productCategories"
+                        Placeholder="Lütfen kategori seçiniz"
+                        LoadData="LoadCategories"
+                        TextProperty="@(nameof(ListProductCategoryDto.Name))"
+                        ValueProperty="@(nameof(ListProductCategoryDto.id))"
+                        Change="ProductCategoryChanged"
+                        AllowFiltering="true"/>
+                </RadzenFormField>
+                <ValidationMessage role="alert" For="() => _model.ProductCategoryId" class="alert alert-danger"/>
+                <RadzenFormField>
+                    <RadzenButton Style="width: 100%" ButtonType="ButtonType.Submit" Text="Kaydet" Icon="save" Disabled="isProcessing"/>
+                </RadzenFormField>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+</EditForm>
 
 @code {
     private bool isProcessing = false;
     private CreateProductDto _model = new();
-    List<ListProductCategoryDto> _productCategories = new List<ListProductCategoryDto>();
+    IEnumerable<ListProductCategoryDto> _productCategories = Enumerable.Empty<ListProductCategoryDto>();
+    private Guid _selectedProductCategory;
 
-    protected override async Task OnInitializedAsync()
+
+    void ProductCategoryChanged(object productCategory)
+    {
+        Guid pCategory = (Guid)productCategory;
+        _model.ProductCategoryId = pCategory;
+    }
+
+    private async Task LoadCategories()
     {
         isProcessing = true;
         var categories = await _productCategoryService.PaginateAsync<ListProductCategoryDto>(new PaginateRequest(1, int.MaxValue));
 
         if (categories.IsSuccess)
         {
-            _productCategories.AddRange(categories.Value.list);
+            _productCategories = categories.Value.list;
         }
 
         isProcessing = false;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategories();
     }
 
     private async Task Save()
